@@ -3,31 +3,40 @@ import React, { useCallback } from 'react';
 import { Upload, FileUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { loadPDF } from '@/utils/pdfUtils';
 
 interface PDFUploaderProps {
-  onFileSelect: (file: File) => void;
+  onFileSelect: (file: File, content: string) => void;
   className?: string;
 }
 
 const PDFUploader = ({ onFileSelect, className }: PDFUploaderProps) => {
-  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
+  const handleFile = useCallback(async (file: File) => {
     if (file && file.type === 'application/pdf') {
-      onFileSelect(file);
+      try {
+        toast.info('Processing PDF, please wait...');
+        const content = await loadPDF(file);
+        onFileSelect(file, content);
+        toast.success('PDF loaded successfully');
+      } catch (error) {
+        console.error('Error processing PDF:', error);
+        toast.error('Failed to process PDF');
+      }
     } else {
       toast.error('Please upload a PDF file');
     }
   }, [onFileSelect]);
 
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  }, [handleFile]);
+
   const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && file.type === 'application/pdf') {
-      onFileSelect(file);
-    } else {
-      toast.error('Please upload a PDF file');
-    }
-  }, [onFileSelect]);
+    if (file) handleFile(file);
+  }, [handleFile]);
 
   return (
     <div

@@ -7,15 +7,12 @@ import { motion } from 'framer-motion';
 const Index = () => {
   const [pdfContent, setPdfContent] = useState<string>('');
   const [isEditing, setIsEditing] = useState(false);
+  const [currentFile, setCurrentFile] = useState<File | null>(null);
 
-  const handleFileSelect = async (file: File) => {
-    // For now, we'll just simulate PDF content
-    const reader = new FileReader();
-    reader.onload = () => {
-      setPdfContent('Sample PDF content for editing');
-      setIsEditing(true);
-    };
-    reader.readAsText(file);
+  const handleFileSelect = async (file: File, content: string) => {
+    setCurrentFile(file);
+    setPdfContent(content);
+    setIsEditing(true);
   };
 
   const handleSave = (content: string) => {
@@ -60,6 +57,7 @@ const Index = () => {
             <PDFEditor 
               pdfContent={pdfContent}
               onSave={handleSave}
+              fileName={currentFile?.name || 'document.pdf'}
             />
           </motion.div>
         )}

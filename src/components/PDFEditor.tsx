@@ -1,24 +1,49 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Download, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { jsPDF } from 'jspdf';
 
 interface PDFEditorProps {
   pdfContent: string;
   onSave: (content: string) => void;
+  fileName?: string;
 }
 
-const PDFEditor = ({ pdfContent, onSave }: PDFEditorProps) => {
+const PDFEditor = ({ pdfContent, onSave, fileName = 'document.pdf' }: PDFEditorProps) => {
   const [content, setContent] = useState(pdfContent);
+  const editorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setContent(pdfContent);
   }, [pdfContent]);
 
   const handleSave = () => {
-    onSave(content);
-    toast.success('Changes saved successfully');
+    if (editorRef.current) {
+      const newContent = editorRef.current.innerHTML;
+      onSave(newContent);
+      toast.success('Changes saved successfully');
+    }
+  };
+
+  const handleExportPDF = () => {
+    try {
+      const doc = new jsPDF();
+      
+      if (editorRef.current) {
+        // Basic HTML to PDF conversion
+        const html = editorRef.current.innerText;
+        const splitText = doc.splitTextToSize(html, 180);
+        doc.text(splitText, 15, 15);
+        doc.save(fileName);
+        
+        toast.success('PDF exported successfully');
+      }
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      toast.error('Failed to export PDF');
+    }
   };
 
   return (
@@ -30,17 +55,22 @@ const PDFEditor = ({ pdfContent, onSave }: PDFEditorProps) => {
             <Save className="w-4 h-4 mr-2" />
             Save
           </Button>
-          <Button>
+          <Button onClick={handleExportPDF}>
             <Download className="w-4 h-4 mr-2" />
             Export PDF
           </Button>
         </div>
       </div>
       <div 
-        className="w-full min-h-[500px] p-6 border rounded-lg"
+        ref={editorRef}
+        className="w-full min-h-[500px] p-6 border rounded-lg overflow-auto"
         contentEditable
         dangerouslySetInnerHTML={{ __html: content }}
-        onBlur={(e) => setContent(e.currentTarget.innerHTML)}
+        onBlur={() => {
+          if (editorRef.current) {
+            setContent(editorRef.current.innerHTML);
+          }
+        }}
       />
     </div>
   );
