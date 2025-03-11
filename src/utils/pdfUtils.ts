@@ -1,9 +1,12 @@
 
 import { getDocument, PDFDocumentProxy } from 'pdfjs-dist';
-import 'pdfjs-dist/build/pdf.worker.entry';
 
-// Set the worker path for PDF.js
-const WORKER_URL = new URL('pdfjs-dist/build/pdf.worker.mjs', import.meta.url);
+// We need to manually set the worker source
+import * as pdfjsLib from 'pdfjs-dist';
+
+// The worker needs to be set up differently for Vite
+// This is the recommended way to set up the worker in a Vite environment
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 export const loadPDF = async (file: File): Promise<string> => {
   try {
