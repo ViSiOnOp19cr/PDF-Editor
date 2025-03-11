@@ -1,10 +1,12 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Download, Save } from 'lucide-react';
+import { Download, Save, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { jsPDF } from 'jspdf';
 import { PDFDocumentProxy } from 'pdfjs-dist';
+import PDFCanvasEditor from './PDFCanvasEditor';
+import { Canvas } from 'fabric';
 
 interface PDFEditorProps {
   pdfContent: PDFDocumentProxy;
@@ -13,52 +15,51 @@ interface PDFEditorProps {
 }
 
 const PDFEditor = ({ pdfContent, onSave, fileName = 'document.pdf' }: PDFEditorProps) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [scale] = useState(1.5);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [editedCanvases, setEditedCanvases] = useState<Map<number, Canvas>>(new Map());
 
   useEffect(() => {
-    const renderPages = async () => {
-      if (!containerRef.current || !pdfContent) return;
+    if (pdfContent) {
+      setTotalPages(pdfContent.numPages);
+    }
+  }, [pdfContent]);
 
-      // Clear previous content
-      containerRef.current.innerHTML = '';
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
-      // Render each page
-      for (let pageNum = 1; pageNum <= pdfContent.numPages; pageNum++) {
-        const page = await pdfContent.getPage(pageNum);
-        const viewport = page.getViewport({ scale });
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
-        // Create canvas for this page
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
-        canvas.className = 'mb-4 mx-auto';
+  const handleSaveCanvas = (canvas: Canvas) => {
+    const newEditedCanvases = new Map(editedCanvases);
+    newEditedCanvases.set(currentPage, canvas);
+    setEditedCanvases(newEditedCanvases);
+    toast.success(`Page ${currentPage} edited and saved`);
+  };
 
-        if (context) {
-          // Render PDF page into canvas context
-          const renderContext = {
-            canvasContext: context,
-            viewport: viewport,
-          };
-
-          await page.render(renderContext).promise;
-        }
-
-        containerRef.current.appendChild(canvas);
-      }
-    };
-
-    renderPages().catch(console.error);
-  }, [pdfContent, scale]);
-
-  const handleSave = () => {
-    toast.success('Changes saved successfully');
+  const handleSaveAllPages = () => {
+    toast.success('All changes saved');
   };
 
   const handleExportPDF = () => {
     try {
+      // This is a simplified export - in a real app you would need to 
+      // combine the original PDF with the edits
       const doc = new jsPDF();
+      editedCanvases.forEach((canvas, pageNum) => {
+        if (pageNum > 1) {
+          doc.addPage();
+        }
+        const dataURL = canvas.toDataURL('image/jpeg', 0.8);
+        doc.addImage(dataURL, 'JPEG', 0, 0, doc.internal.pageSize.getWidth(), doc.internal.pageSize.getHeight());
+      });
       doc.save(fileName);
       toast.success('PDF exported successfully');
     } catch (error) {
@@ -70,11 +71,11 @@ const PDFEditor = ({ pdfContent, onSave, fileName = 'document.pdf' }: PDFEditorP
   return (
     <div className="flex flex-col gap-4 w-full max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-semibold text-gray-800">View Document</h2>
+        <h2 className="text-2xl font-semibold text-gray-800">Edit Document</h2>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleSave}>
+          <Button variant="outline" onClick={handleSaveAllPages}>
             <Save className="w-4 h-4 mr-2" />
-            Save
+            Save All
           </Button>
           <Button onClick={handleExportPDF}>
             <Download className="w-4 h-4 mr-2" />
@@ -82,9 +83,36 @@ const PDFEditor = ({ pdfContent, onSave, fileName = 'document.pdf' }: PDFEditorP
           </Button>
         </div>
       </div>
-      <div 
-        ref={containerRef}
-        className="w-full min-h-[500px] p-6 border rounded-lg overflow-auto"
+
+      <div className="flex items-center justify-center gap-4 mb-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handlePreviousPage}
+          disabled={currentPage <= 1}
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Previous
+        </Button>
+        <span className="text-sm font-medium">
+          Page {currentPage} of {totalPages}
+        </span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleNextPage}
+          disabled={currentPage >= totalPages}
+        >
+          Next
+          <ChevronRight className="w-4 h-4" />
+        </Button>
+      </div>
+
+      <PDFCanvasEditor
+        pdfDocument={pdfContent}
+        currentPage={currentPage}
+        fileName={fileName}
+        onSave={handleSaveCanvas}
       />
     </div>
   );

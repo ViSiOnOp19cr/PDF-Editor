@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import PDFUploader from '@/components/PDFUploader';
 import PDFEditor from '@/components/PDFEditor';
@@ -17,6 +18,7 @@ const Index = () => {
 
   const handleSave = (content: string) => {
     // Handle save operation if needed
+    console.log('Content saved:', content);
   };
 
   return (
