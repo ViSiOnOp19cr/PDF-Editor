@@ -1,22 +1,22 @@
-
 import React, { useState } from 'react';
 import PDFUploader from '@/components/PDFUploader';
 import PDFEditor from '@/components/PDFEditor';
 import { motion } from 'framer-motion';
+import { PDFDocumentProxy } from 'pdfjs-dist';
 
 const Index = () => {
-  const [pdfContent, setPdfContent] = useState<string>('');
+  const [pdfDocument, setPdfDocument] = useState<PDFDocumentProxy | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
 
-  const handleFileSelect = async (file: File, content: string) => {
+  const handleFileSelect = async (file: File, pdf: PDFDocumentProxy) => {
     setCurrentFile(file);
-    setPdfContent(content);
+    setPdfDocument(pdf);
     setIsEditing(true);
   };
 
   const handleSave = (content: string) => {
-    setPdfContent(content);
+    // Handle save operation if needed
   };
 
   return (
@@ -54,11 +54,13 @@ const Index = () => {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <PDFEditor 
-              pdfContent={pdfContent}
-              onSave={handleSave}
-              fileName={currentFile?.name || 'document.pdf'}
-            />
+            {pdfDocument && (
+              <PDFEditor 
+                pdfContent={pdfDocument}
+                onSave={handleSave}
+                fileName={currentFile?.name || 'document.pdf'}
+              />
+            )}
           </motion.div>
         )}
       </div>

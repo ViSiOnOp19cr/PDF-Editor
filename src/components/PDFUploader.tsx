@@ -1,12 +1,13 @@
 
 import React, { useCallback } from 'react';
-import { Upload, FileUp } from 'lucide-react';
+import { Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { loadPDF } from '@/utils/pdfUtils';
+import { PDFDocumentProxy } from 'pdfjs-dist';
 
 interface PDFUploaderProps {
-  onFileSelect: (file: File, content: string) => void;
+  onFileSelect: (file: File, content: PDFDocumentProxy) => void;
   className?: string;
 }
 
@@ -15,8 +16,8 @@ const PDFUploader = ({ onFileSelect, className }: PDFUploaderProps) => {
     if (file && file.type === 'application/pdf') {
       try {
         toast.info('Processing PDF, please wait...');
-        const content = await loadPDF(file);
-        onFileSelect(file, content);
+        const pdf = await loadPDF(file);
+        onFileSelect(file, pdf);
         toast.success('PDF loaded successfully');
       } catch (error) {
         console.error('Error processing PDF:', error);
