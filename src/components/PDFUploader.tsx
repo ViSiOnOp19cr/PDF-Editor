@@ -1,0 +1,61 @@
+
+import React, { useCallback } from 'react';
+import { Upload, FileUp } from 'lucide-react';
+import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+
+interface PDFUploaderProps {
+  onFileSelect: (file: File) => void;
+  className?: string;
+}
+
+const PDFUploader = ({ onFileSelect, className }: PDFUploaderProps) => {
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file && file.type === 'application/pdf') {
+      onFileSelect(file);
+    } else {
+      toast.error('Please upload a PDF file');
+    }
+  }, [onFileSelect]);
+
+  const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type === 'application/pdf') {
+      onFileSelect(file);
+    } else {
+      toast.error('Please upload a PDF file');
+    }
+  }, [onFileSelect]);
+
+  return (
+    <div
+      className={cn(
+        "relative group cursor-pointer rounded-xl border-2 border-dashed border-gray-300 p-12 transition-all hover:border-blue-400",
+        "bg-white/50 backdrop-blur-sm hover:bg-white/60",
+        className
+      )}
+      onDrop={handleDrop}
+      onDragOver={(e) => e.preventDefault()}
+    >
+      <input
+        type="file"
+        accept=".pdf"
+        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+        onChange={handleFileInput}
+      />
+      <div className="flex flex-col items-center justify-center gap-4">
+        <div className="p-4 rounded-full bg-blue-50 text-blue-500">
+          <Upload className="w-8 h-8" />
+        </div>
+        <div className="text-center">
+          <h3 className="text-lg font-semibold text-gray-700">Upload your PDF</h3>
+          <p className="mt-1 text-sm text-gray-500">Drag and drop or click to select</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default PDFUploader;
