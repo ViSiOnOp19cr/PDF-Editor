@@ -27,6 +27,18 @@ export const createCircle = (options: any) => {
   return new fabric.Circle(options);
 };
 
+// Helper for creating text boxes with rich text capabilities
+export const createTextbox = (text: string, options: any) => {
+  return new fabric.Textbox(text, {
+    fontFamily: 'Arial',
+    fontSize: 20,
+    fill: '#000000',
+    width: 300,
+    editable: true,
+    ...options
+  });
+};
+
 // Available fonts for text editing
 export const availableFonts = [
   'Arial',
@@ -62,4 +74,12 @@ export const updateTextProperties = (
   });
   
   textObject.canvas?.renderAll();
+};
+
+// Convert CKEditor content to Fabric.js text
+export const ckeditorContentToFabric = (content: string, options: any) => {
+  // Strip HTML tags for basic text conversion
+  // In a production app, you might want a more sophisticated HTML-to-text converter
+  const plainText = content.replace(/<[^>]*>?/gm, '');
+  return createTextbox(plainText, options);
 };

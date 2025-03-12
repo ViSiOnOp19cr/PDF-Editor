@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,9 @@ import {
   Download,
   Bold,
   Italic,
-  Underline
+  Underline,
+  Edit,
+  Check
 } from 'lucide-react';
 import { PDFDocumentProxy } from 'pdfjs-dist';
 import { pdfPageToDataURL, getPageDimensions } from '@/utils/pdfUtils';
@@ -23,7 +26,9 @@ import {
   createRect, 
   createCircle, 
   availableFonts,
-  updateTextProperties
+  updateTextProperties,
+  createTextbox,
+  ckeditorContentToFabric
 } from '@/utils/fabricUtils';
 import {
   Select,
@@ -38,6 +43,14 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Slider } from "@/components/ui/slider";
+import CKEditorWrapper from './CKEditorWrapper';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface PDFCanvasEditorProps {
   pdfDocument: PDFDocumentProxy;
@@ -62,6 +75,8 @@ const PDFCanvasEditor = ({
   const [isBold, setIsBold] = useState(false);
   const [isItalic, setIsItalic] = useState(false);
   const [isUnderline, setIsUnderline] = useState(false);
+  const [editorContent, setEditorContent] = useState('');
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -97,6 +112,10 @@ const PDFCanvasEditor = ({
       setIsItalic(selectedObj.fontStyle === 'italic');
       setIsUnderline(selectedObj.underline || false);
       setActiveColor(selectedObj.fill || '#000000');
+      
+      if (selectedObj.text) {
+        setEditorContent(selectedObj.text);
+      }
     }
   };
 
@@ -147,7 +166,14 @@ const PDFCanvasEditor = ({
   const handleAddText = () => {
     if (!canvas) return;
     
-    const text = createText('Double click to edit', {
+    setIsEditorOpen(true);
+    setEditorContent('');
+  };
+
+  const handleApplyRichText = () => {
+    if (!canvas) return;
+    
+    const textbox = ckeditorContentToFabric(editorContent, {
       left: 100,
       top: 100,
       fontFamily,
@@ -158,9 +184,40 @@ const PDFCanvasEditor = ({
       underline: isUnderline,
     });
     
-    canvas.add(text);
-    canvas.setActiveObject(text);
+    canvas.add(textbox);
+    canvas.setActiveObject(textbox);
     canvas.renderAll();
+    
+    setIsEditorOpen(false);
+    toast.success('Rich text added');
+  };
+
+  const handleEditSelectedText = () => {
+    if (!canvas || !selectedObject || selectedObject.type !== 'text') return;
+    
+    // @ts-ignore
+    setEditorContent(selectedObject.text || '');
+    setIsEditorOpen(true);
+  };
+
+  const handleUpdateSelectedText = () => {
+    if (!canvas || !selectedObject || selectedObject.type !== 'text') return;
+    
+    // @ts-ignore
+    selectedObject.set('text', editorContent.replace(/<[^>]*>?/gm, ''));
+    
+    updateTextProperties(selectedObject as fabric.Text, {
+      fontFamily,
+      fontSize,
+      fill: activeColor,
+      fontWeight: isBold ? 'bold' : 'normal',
+      fontStyle: isItalic ? 'italic' : 'normal',
+      underline: isUnderline
+    });
+    
+    canvas.renderAll();
+    setIsEditorOpen(false);
+    toast.success('Text updated');
   };
 
   const handleAddRectangle = () => {
@@ -258,7 +315,7 @@ const PDFCanvasEditor = ({
           onClick={() => { handleToolClick('text'); handleAddText(); }}
         >
           <Type className="w-4 h-4 mr-2" />
-          Text
+          Add Text
         </Button>
         <Button 
           variant={activeTool === 'rectangle' ? 'default' : 'outline'} 
@@ -375,8 +432,40 @@ const PDFCanvasEditor = ({
           >
             Apply Format
           </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleEditSelectedText}
+          >
+            <Edit className="w-4 h-4 mr-2" />
+            Edit Text
+          </Button>
         </div>
       )}
+
+      <Dialog open={isEditorOpen} onOpenChange={setIsEditorOpen}>
+        <DialogContent className="sm:max-w-[800px]">
+          <DialogHeader>
+            <DialogTitle>{selectedObject ? 'Edit Text' : 'Add Rich Text'}</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <CKEditorWrapper 
+              initialContent={editorContent}
+              onContentChange={setEditorContent}
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsEditorOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={selectedObject ? handleUpdateSelectedText : handleApplyRichText}>
+              <Check className="w-4 h-4 mr-2" />
+              {selectedObject ? 'Update' : 'Insert'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="border border-gray-200 rounded-lg overflow-hidden shadow-lg mx-auto">
         <canvas ref={canvasRef} />
