@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Canvas, IEvent, ActiveSelection, Text } from 'fabric';
+import { Canvas } from 'fabric';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { 
@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { PDFDocumentProxy } from 'pdfjs-dist';
 import { pdfPageToDataURL, getPageDimensions } from '@/utils/pdfUtils';
+import { createText, createRect, createCircle } from '@/utils/fabricUtils';
 
 interface PDFCanvasEditorProps {
   pdfDocument: PDFDocumentProxy;
@@ -112,7 +113,7 @@ const PDFCanvasEditor = ({
   const handleAddText = () => {
     if (!canvas) return;
     
-    const text = new Text('Double click to edit', {
+    const text = createText('Double click to edit', {
       left: 100,
       top: 100,
       fontFamily: 'Arial',
@@ -129,7 +130,7 @@ const PDFCanvasEditor = ({
   const handleAddRectangle = () => {
     if (!canvas) return;
     
-    canvas.add(new fabric.Rect({
+    const rect = createRect({
       left: 100,
       top: 100,
       fill: 'transparent',
@@ -137,21 +138,25 @@ const PDFCanvasEditor = ({
       strokeWidth: 2,
       width: 100,
       height: 50,
-    }));
+    });
+    
+    canvas.add(rect);
     canvas.renderAll();
   };
 
   const handleAddCircle = () => {
     if (!canvas) return;
     
-    canvas.add(new fabric.Circle({
+    const circle = createCircle({
       left: 100,
       top: 100,
       fill: 'transparent',
       stroke: activeColor,
       strokeWidth: 2,
       radius: 30,
-    }));
+    });
+    
+    canvas.add(circle);
     canvas.renderAll();
   };
 
