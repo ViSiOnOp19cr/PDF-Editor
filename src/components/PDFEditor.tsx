@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Download, Save, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -72,8 +71,18 @@ const PDFEditor = ({ pdfContent, onSave, fileName = 'document.pdf' }: PDFEditorP
           }
           isFirstPage = false;
           
-          // Get the data URL from the canvas
-          const dataURL = canvas.toDataURL('image/jpeg', 0.95);
+          // Make sure all objects are rendered properly
+          canvas.renderAll();
+          
+          // Wait a moment to ensure all images are fully rendered
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+          // Get the data URL with higher quality and proper image format
+          const dataURL = canvas.toDataURL({
+            format: 'jpeg',
+            quality: 1.0,
+            multiplier: 2  // Increase resolution
+          });
           
           // Add the image to the PDF
           doc.addImage(
@@ -109,7 +118,7 @@ const PDFEditor = ({ pdfContent, onSave, fileName = 'document.pdf' }: PDFEditorP
             }).promise;
             
             // Add the rendered page to the PDF
-            const dataURL = canvas.toDataURL('image/jpeg', 0.95);
+            const dataURL = canvas.toDataURL('image/jpeg', 1.0);
             doc.addImage(
               dataURL, 
               'JPEG', 
@@ -134,7 +143,7 @@ const PDFEditor = ({ pdfContent, onSave, fileName = 'document.pdf' }: PDFEditorP
   };
 
   return (
-    <div className="flex flex-col gap-4 w-full max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6">
+    <div className="flex flex-col gap-4 w-50% bg-white rounded-xl shadow-lg p-6">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-semibold text-gray-800">Edit Document</h2>
         <div className="flex gap-2">
