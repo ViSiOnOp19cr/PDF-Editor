@@ -1,6 +1,5 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Canvas } from 'fabric';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { 
@@ -16,13 +15,14 @@ import {
 } from 'lucide-react';
 import { PDFDocumentProxy } from 'pdfjs-dist';
 import { pdfPageToDataURL, getPageDimensions } from '@/utils/pdfUtils';
+import { fabric } from 'fabric';
 import { createText, createRect, createCircle } from '@/utils/fabricUtils';
 
 interface PDFCanvasEditorProps {
   pdfDocument: PDFDocumentProxy;
   currentPage: number;
   fileName: string;
-  onSave: (fabricCanvas: Canvas) => void;
+  onSave: (fabricCanvas: fabric.Canvas) => void;
 }
 
 const PDFCanvasEditor = ({ 
@@ -32,7 +32,7 @@ const PDFCanvasEditor = ({
   onSave
 }: PDFCanvasEditorProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [canvas, setCanvas] = useState<Canvas | null>(null);
+  const [canvas, setCanvas] = useState<fabric.Canvas | null>(null);
   const [activeTool, setActiveTool] = useState<'select' | 'draw' | 'text' | 'rectangle' | 'circle'>('select');
   const [activeColor, setActiveColor] = useState('#000000');
 
@@ -40,7 +40,8 @@ const PDFCanvasEditor = ({
   useEffect(() => {
     if (!canvasRef.current) return;
     
-    const fabricCanvas = new Canvas(canvasRef.current, {
+    // Use fabric.Canvas instead of Canvas directly
+    const fabricCanvas = new fabric.Canvas(canvasRef.current, {
       width: 800,
       height: 1100,
       backgroundColor: '#ffffff',
@@ -77,14 +78,11 @@ const PDFCanvasEditor = ({
         const imageUrl = await pdfPageToDataURL(page);
         
         // Set image as background
-        canvas.setBackgroundImage(imageUrl, canvas.renderAll.bind(canvas), {
-          originX: 'left',
-          originY: 'top',
-          scaleX: 1,
-          scaleY: 1
+        fabric.Image.fromURL(imageUrl, function(img) {
+          canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas));
+          canvas.renderAll();
+          toast.success(`Page ${currentPage} loaded`);
         });
-        
-        toast.success(`Page ${currentPage} loaded`);
       } catch (error) {
         console.error('Error loading PDF page:', error);
         toast.error('Failed to load PDF page');
@@ -164,8 +162,10 @@ const PDFCanvasEditor = ({
     if (!canvas) return;
     
     const activeObjects = canvas.getActiveObjects();
-    if (activeObjects) {
-      canvas.remove(...activeObjects);
+    if (activeObjects.length > 0) {
+      activeObjects.forEach(obj => {
+        canvas.remove(obj);
+      });
       canvas.discardActiveObject();
       canvas.renderAll();
       toast.success('Objects removed');

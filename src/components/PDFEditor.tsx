@@ -1,12 +1,11 @@
-
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Download, Save, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { jsPDF } from 'jspdf';
 import { PDFDocumentProxy } from 'pdfjs-dist';
 import PDFCanvasEditor from './PDFCanvasEditor';
-import { Canvas } from 'fabric';
+import { fabric } from 'fabric';
 
 interface PDFEditorProps {
   pdfContent: PDFDocumentProxy;
@@ -17,7 +16,7 @@ interface PDFEditorProps {
 const PDFEditor = ({ pdfContent, onSave, fileName = 'document.pdf' }: PDFEditorProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  const [editedCanvases, setEditedCanvases] = useState<Map<number, Canvas>>(new Map());
+  const [editedCanvases, setEditedCanvases] = useState<Map<number, fabric.Canvas>>(new Map());
 
   useEffect(() => {
     if (pdfContent) {
@@ -37,7 +36,7 @@ const PDFEditor = ({ pdfContent, onSave, fileName = 'document.pdf' }: PDFEditorP
     }
   };
 
-  const handleSaveCanvas = (canvas: Canvas) => {
+  const handleSaveCanvas = (canvas: fabric.Canvas) => {
     const newEditedCanvases = new Map(editedCanvases);
     newEditedCanvases.set(currentPage, canvas);
     setEditedCanvases(newEditedCanvases);

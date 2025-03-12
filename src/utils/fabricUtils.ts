@@ -1,25 +1,20 @@
 
-import { Canvas, Text, Rect, Circle } from 'fabric';
+import { fabric } from 'fabric';
 
-// Re-export fabric classes for easier use
-export {
-  Canvas,
-  Text,
-  Rect,
-  Circle
-};
+// Re-export fabric object for easier use
+export { fabric };
 
 // Helper to create text objects
 export const createText = (text: string, options: any) => {
-  return new Text(text, options);
+  return new fabric.Text(text, options);
 };
 
 // Helper to create rectangle objects
 export const createRect = (options: any) => {
-  return new Rect(options);
+  return new fabric.Rect(options);
 };
 
 // Helper to create circle objects
 export const createCircle = (options: any) => {
-  return new Circle(options);
+  return new fabric.Circle(options);
 };
