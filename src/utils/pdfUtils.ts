@@ -43,3 +43,71 @@ export const getPageDimensions = (page: any, scale: number = 1.5) => {
     height: viewport.height
   };
 };
+
+// Extract text content from a PDF page
+export const extractTextFromPage = async (page: any) => {
+  try {
+    const textContent = await page.getTextContent();
+    return textContent.items.map((item: any) => {
+      const transform = item.transform || [1, 0, 0, 1, 0, 0];
+      const style = textContent.styles?.[item.fontName] || {};
+      
+      return {
+        text: item.str,
+        x: transform[4],
+        y: transform[5],
+        fontSize: item.height || 12,
+        fontFamily: style.fontFamily || 'sans-serif',
+        fontWeight: style.fontWeight || 'normal',
+        fontStyle: style.fontStyle || 'normal',
+        color: '#000000'
+      };
+    });
+  } catch (error) {
+    console.error('Error extracting text from PDF page:', error);
+    return [];
+  }
+};
+
+// Create a fabric.js canvas from a PDF page
+export const createFabricCanvasFromPDF = async (
+  pdfPage: any,
+  canvas: fabric.Canvas,
+  scale: number = 1.5
+) => {
+  try {
+    // Clear existing canvas
+    canvas.clear();
+    
+    // Set dimensions based on the PDF page
+    const dimensions = getPageDimensions(pdfPage, scale);
+    canvas.setWidth(dimensions.width);
+    canvas.setHeight(dimensions.height);
+    
+    // Render the PDF page as background
+    const imageUrl = await pdfPageToDataURL(pdfPage, scale);
+    fabric.Image.fromURL(imageUrl, (img) => {
+      canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas));
+      
+      // Extract and add text elements from the PDF
+      extractTextFromPage(pdfPage).then((textItems) => {
+        textItems.forEach((item: any) => {
+          const text = new fabric.Text(item.text, {
+            left: item.x,
+            top: dimensions.height - item.y, // Y-coordinate conversion
+            fontSize: item.fontSize,
+            fontFamily: item.fontFamily,
+            fill: item.color,
+            fontWeight: item.fontWeight,
+            fontStyle: item.fontStyle,
+            editable: true
+          });
+          canvas.add(text);
+        });
+        canvas.renderAll();
+      });
+    });
+  } catch (error) {
+    console.error('Error creating fabric canvas from PDF:', error);
+  }
+};

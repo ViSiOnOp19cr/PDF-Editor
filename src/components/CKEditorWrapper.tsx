@@ -40,14 +40,45 @@ const CKEditorWrapper = ({ initialContent = '', onContentChange }: CKEditorWrapp
               'fontSize',
               'fontFamily',
               '|',
+              'alignment',
+              'indent',
+              'outdent',
+              '|',
+              'imageUpload',
+              'blockQuote',
+              'insertTable',
+              'mediaEmbed',
+              '|',
               'undo',
               'redo'
             ],
-            placeholder: 'Type or paste your text here...'
+            placeholder: 'Edit PDF text here...',
+            fontSize: {
+              options: [9, 10, 11, 12, 13, 14, 16, 18, 20, 22, 24, 26, 28, 36, 48, 72]
+            },
+            fontFamily: {
+              options: [
+                'default',
+                'Arial, Helvetica, sans-serif',
+                'Courier New, Courier, monospace',
+                'Georgia, serif',
+                'Lucida Sans Unicode, Lucida Grande, sans-serif',
+                'Tahoma, Geneva, sans-serif',
+                'Times New Roman, Times, serif',
+                'Trebuchet MS, Helvetica, sans-serif',
+                'Verdana, Geneva, sans-serif'
+              ]
+            },
+            image: {
+              toolbar: ['imageTextAlternative', 'imageStyle:full', 'imageStyle:side']
+            },
+            table: {
+              contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells']
+            }
           }}
         />
       ) : (
-        <div className="h-40 flex items-center justify-center bg-gray-50">
+        <div className="h-64 flex items-center justify-center bg-gray-50">
           <p className="text-gray-500">Loading editor...</p>
         </div>
       )}

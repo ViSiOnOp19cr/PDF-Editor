@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Download, Save, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,6 +7,7 @@ import { jsPDF } from 'jspdf';
 import { PDFDocumentProxy } from 'pdfjs-dist';
 import PDFCanvasEditor from './PDFCanvasEditor';
 import { fabric } from 'fabric';
+import { fabricCanvasToPDF } from '@/utils/fabricUtils';
 
 interface PDFEditorProps {
   pdfContent: PDFDocumentProxy;
@@ -45,20 +47,84 @@ const PDFEditor = ({ pdfContent, onSave, fileName = 'document.pdf' }: PDFEditorP
 
   const handleSaveAllPages = () => {
     toast.success('All changes saved');
+    // You could implement additional logic here to save to a server
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     try {
-      // This is a simplified export - in a real app you would need to 
-      // combine the original PDF with the edits
-      const doc = new jsPDF();
-      editedCanvases.forEach((canvas, pageNum) => {
-        if (pageNum > 1) {
-          doc.addPage();
-        }
-        const dataURL = canvas.toDataURL('image/jpeg', 0.8);
-        doc.addImage(dataURL, 'JPEG', 0, 0, doc.internal.pageSize.getWidth(), doc.internal.pageSize.getHeight());
+      toast.info('Preparing PDF for export...');
+      
+      // Create a new PDF document
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'pt'
       });
+      
+      // Process each edited page
+      let isFirstPage = true;
+      for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+        const canvas = editedCanvases.get(pageNum);
+        
+        if (canvas) {
+          // Add a new page for all pages except the first one
+          if (!isFirstPage) {
+            doc.addPage();
+          }
+          isFirstPage = false;
+          
+          // Get the data URL from the canvas
+          const dataURL = canvas.toDataURL('image/jpeg', 0.95);
+          
+          // Add the image to the PDF
+          doc.addImage(
+            dataURL, 
+            'JPEG', 
+            0, 
+            0, 
+            doc.internal.pageSize.getWidth(), 
+            doc.internal.pageSize.getHeight()
+          );
+        } else if (pageNum <= pdfContent.numPages) {
+          // For non-edited pages, try to get the original page from the PDF
+          try {
+            // Add a new page for all pages except the first one
+            if (!isFirstPage) {
+              doc.addPage();
+            }
+            isFirstPage = false;
+            
+            // Get the page from the original PDF
+            const page = await pdfContent.getPage(pageNum);
+            const viewport = page.getViewport({ scale: 1.5 });
+            
+            // Create a canvas to render the PDF page
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            
+            await page.render({
+              canvasContext: context!,
+              viewport: viewport
+            }).promise;
+            
+            // Add the rendered page to the PDF
+            const dataURL = canvas.toDataURL('image/jpeg', 0.95);
+            doc.addImage(
+              dataURL, 
+              'JPEG', 
+              0, 
+              0, 
+              doc.internal.pageSize.getWidth(), 
+              doc.internal.pageSize.getHeight()
+            );
+          } catch (error) {
+            console.error(`Error rendering page ${pageNum}:`, error);
+          }
+        }
+      }
+      
+      // Save the PDF
       doc.save(fileName);
       toast.success('PDF exported successfully');
     } catch (error) {
