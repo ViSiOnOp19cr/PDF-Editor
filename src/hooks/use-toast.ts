@@ -168,6 +168,7 @@ function toast({ ...props }: Toast) {
   }
 }
 
+// Custom hook for managing toast notifications throughout the application
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState)
 

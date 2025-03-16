@@ -1,4 +1,4 @@
-
+// Component for uploading and processing PDF files before editing
 import React, { useCallback } from 'react';
 import { Upload } from 'lucide-react';
 import { toast } from 'sonner';

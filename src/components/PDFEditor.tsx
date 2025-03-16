@@ -8,6 +8,8 @@ import PDFCanvasEditor from './PDFCanvasEditor';
 import { fabric } from 'fabric';
 import { fabricCanvasToPDF } from '@/utils/fabricUtils';
 
+// Main PDF editing component that orchestrates document editing functionality
+
 interface PDFEditorProps {
   pdfContent: PDFDocumentProxy;
   onSave: (content: string) => void;

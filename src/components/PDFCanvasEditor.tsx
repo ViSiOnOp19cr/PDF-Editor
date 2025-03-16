@@ -55,6 +55,8 @@ import {
 } from "@/components/ui/dialog";
 import { SketchPicker } from 'react-color';
 
+// Canvas-based PDF editor that enables direct manipulation of PDF content using Fabric.js
+
 interface PDFCanvasEditorProps {
   pdfDocument: PDFDocumentProxy;
   currentPage: number;

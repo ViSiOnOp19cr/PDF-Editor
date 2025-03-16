@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from 'sonner';
 import { fabric , fabricCanvas} from 'fabric';
 
+// Wrapper component for CKEditor integration providing rich text editing capabilities
 interface CKEditorWrapperProps {
   initialContent?: string;
   onContentChange: (content: string) => void;

@@ -4,6 +4,7 @@ import PDFUploader from '@/components/PDFUploader';
 import { motion } from 'framer-motion';
 import { PDFDocumentProxy } from 'pdfjs-dist';
 
+// Landing page component that allows users to upload or select PDFs for editing
 const Home = () => {
   const navigate = useNavigate();
 

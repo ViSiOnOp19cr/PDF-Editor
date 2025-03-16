@@ -1,10 +1,11 @@
-
 import { fabric } from 'fabric';
 import { jsPDF } from 'jspdf';
 import DOMPurify from 'dompurify';
 
 // Re-export fabric object for easier use
 export { fabric };
+
+// Utility functions for working with Fabric.js canvas and PDF integration
 
 // Helper to create text objects with enhanced editing capabilities
 export const createText = (text: string, options: any) => {

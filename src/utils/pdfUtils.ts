@@ -1,11 +1,13 @@
-
 import { getDocument, PDFDocumentProxy } from 'pdfjs-dist';
 import * as pdfjsLib from 'pdfjs-dist';
+import { fabric } from 'fabric';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.mjs',
   import.meta.url
 ).toString();
+
+// Utility functions for PDF processing, rendering, and manipulation
 
 export const loadPDF = async (file: File): Promise<PDFDocumentProxy> => {
   try {

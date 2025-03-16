@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
+// Page component for the PDF editor interface that integrates various editing tools
 const Editor = () => {
   const { fileId } = useParams<{ fileId: string }>();
   const navigate = useNavigate();
